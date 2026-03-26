@@ -474,6 +474,17 @@ tbody tr:hover td{background:rgba(255,255,255,.015)}
     <div class="page" id="page-settings">
       <div class="sh"><span class="sh-t">Settings</span></div>
       <div class="ssec">
+        <div class="ssec-h">API key — Live prices</div>
+        <div class="srow">
+          <div>
+            <div class="s-lbl">Alpha Vantage API key</div>
+            <div class="s-desc">Free · 25 req/day · <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--ac);text-decoration:none">Get your free key in 30 seconds →</a></div>
+          </div>
+          <input class="sinput" id="setting-avkey" placeholder="Paste key here" style="width:180px" onchange="saveSetting('avkey',this.value)"/>
+        </div>
+        <div style="padding:10px 18px;font-size:12px;color:var(--t3)">Crypto prices via CoinGecko (no key needed). US stocks, ASX &amp; ETFs use Alpha Vantage.</div>
+      </div>
+      <div class="ssec">
         <div class="ssec-h">Portfolio</div>
         <div class="srow"><div><div class="s-lbl">Cash balance (AUD)</div><div class="s-desc">Your uninvested cash position</div></div><input class="sinput" id="setting-cash" value="0" onchange="saveSetting('cash',this.value)"/></div>
         <div class="srow"><div><div class="s-lbl">USD → AUD rate</div><div class="s-desc">Used to convert US stock prices</div></div><input class="sinput" id="setting-rate" value="1.5748" onchange="saveSetting('usdaud',this.value)"/></div>
@@ -551,53 +562,36 @@ tbody tr:hover td{background:rgba(255,255,255,.015)}
 
 <!-- ADD ASSET MODAL -->
 <div class="modal-bg" id="modal-asset" style="display:none" onclick="if(event.target===this)closeModal('modal-asset')">
-  <div class="modal" style="width:480px">
+  <div class="modal">
     <div class="modal-title">Add asset</div>
-
-    <!-- STEP 1: Search -->
-    <div id="asset-step1">
-      <div class="form-row" style="position:relative">
-        <label class="form-label">Search Yahoo Finance</label>
-        <div style="display:flex;gap:8px">
-          <input class="form-input" id="asset-search" placeholder="Type ticker or company name… e.g. Apple, BTC, NXT.AX" oninput="debounceSearch(this.value)" onkeydown="if(event.key==='Enter')runAssetSearch()" autocomplete="off" style="flex:1"/>
-          <button class="btn" id="asset-search-btn" onclick="runAssetSearch()">
-            <svg viewBox="0 0 12 12" fill="none" width="12" height="12"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 8l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            Search
-          </button>
-        </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Ticker symbol</label>
+        <input class="form-input" id="m-ticker" placeholder="AAPL · BTC · A200.AX · NDQ" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')saveAssetManual()"/>
       </div>
-      <div id="asset-search-status" style="font-size:12px;color:var(--t3);margin-bottom:10px;min-height:18px"></div>
-      <div id="asset-results" style="display:none;border:1px solid var(--b2);border-radius:var(--rs);overflow:hidden;margin-bottom:4px;max-height:280px;overflow-y:auto"></div>
-    </div>
-
-    <!-- STEP 2: Confirm & configure -->
-    <div id="asset-step2" style="display:none">
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-e);border:1px solid var(--b2);border-radius:var(--rs);margin-bottom:16px">
-        <div id="asset-confirm-icon" style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:500;flex-shrink:0"></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500" id="asset-confirm-name"></div>
-          <div style="font-size:11.5px;color:var(--t3);font-family:var(--mono)" id="asset-confirm-meta"></div>
-        </div>
-        <button class="btn btn-sm" onclick="resetAssetSearch()" style="flex-shrink:0">Change</button>
-      </div>
-      <div class="form-row-2">
-        <div>
-          <label class="form-label">Type</label>
-          <select class="form-select" id="asset-type">
-            <option>US Equity</option><option>ASX</option><option>Crypto</option><option>ETF</option><option>Bond</option><option>Other</option>
-          </select>
-        </div>
-        <div>
-          <label class="form-label">Target allocation %</label>
-          <input class="form-input" type="number" id="asset-target" placeholder="10" min="0" max="100"/>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn" onclick="closeModal('modal-asset')">Cancel</button>
-        <button class="btn btn-ac" onclick="saveAsset()">Add asset</button>
+      <div>
+        <label class="form-label">Type</label>
+        <select class="form-select" id="m-type">
+          <option>US Equity</option><option>ASX</option><option>Crypto</option><option>ETF</option><option>Bond</option><option>Other</option>
+        </select>
       </div>
     </div>
-
+    <div class="form-row">
+      <label class="form-label">Name (optional)</label>
+      <input class="form-input" id="m-name" placeholder="e.g. Apple Inc. — leave blank to use ticker"/>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Target allocation %</label>
+      <input class="form-input" type="number" id="m-target" placeholder="10" min="0" max="100"/>
+    </div>
+    <div style="font-size:12px;color:var(--t3);padding:10px 12px;background:var(--bg-e);border-radius:var(--rs);margin-bottom:4px;line-height:1.6">
+      After adding, hit <strong style="color:var(--t2)">Live prices</strong> in the topbar to fetch the current price.<br/>
+      <span style="color:var(--t3)">US Equity / ETF / Bond → USD converted to AUD automatically. ASX → AUD already. Crypto → AUD via CoinGecko.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-asset')">Cancel</button>
+      <button class="btn btn-ac" onclick="saveAssetManual()">Add asset</button>
+    </div>
   </div>
 </div>
 
@@ -678,91 +672,129 @@ function fmtAUD(n){if(n===null||n===undefined||isNaN(n)) return '—'; return '$
 function fmtPct(n){if(isNaN(n)||!isFinite(n)) return '—'; return (n>=0?'+':'')+n.toFixed(2)+'%'}
 
 // ═══════════════════════════════════════════════════
-// CORS PROXY — tries multiple providers in order
 // ═══════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════
-// YAHOO FINANCE — JSONP (works from file://, no proxy needed)
+// PRICE FETCHING
+// Stooq.com  — US stocks, ASX, ETFs (free, real CORS, no key)
+// CoinGecko  — crypto (free, real CORS, no key, returns AUD natively)
+// Frankfurter— USD/AUD rate (free, real CORS, no key)
 // ═══════════════════════════════════════════════════
 
-// Generic JSONP loader — injects a <script> tag and resolves when Yahoo calls back
-function jsonp(url, callbackParam='callback') {
-  return new Promise((resolve, reject) => {
-    const cbName = '_yf_' + Math.random().toString(36).slice(2);
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      script.remove();
-      reject(new Error('timeout'));
-    }, 8000);
-    window[cbName] = (data) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      resolve(data);
-    };
-    const script = document.createElement('script');
-    script.src = url + (url.includes('?') ? '&' : '?') + callbackParam + '=' + cbName;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      reject(new Error('script error'));
-    };
-    document.head.appendChild(script);
-  });
-}
+// Map common crypto tickers to CoinGecko IDs
+const COINGECKO_IDS = {
+  BTC:'bitcoin', ETH:'ethereum', SOL:'solana', BNB:'binancecoin',
+  ADA:'cardano', XRP:'ripple', DOGE:'dogecoin', AVAX:'avalanche-2',
+  DOT:'polkadot', MATIC:'matic-network', LINK:'chainlink', LTC:'litecoin',
+  ATOM:'cosmos', UNI:'uniswap', SHIB:'shiba-inu', NEAR:'near',
+};
 
-async function fetchYahooPrice(ticker, type) {
-  let sym = ticker.toUpperCase();
-  if (type === 'Crypto') sym = sym.replace(/-?USD$/i, '') + '-USD';
-  else if (type === 'ASX' && !sym.endsWith('.AX')) sym = sym + '.AX';
+// ═══════════════════════════════════════════════════
+// PRICE FETCHING
+// Alpha Vantage — stocks, ETFs, ASX, FX (free key, true CORS)
+// CoinGecko     — crypto (no key, true CORS)
+// open.er-api   — USD/AUD fallback (no key, true CORS)
+// ═══════════════════════════════════════════════════
+
+function getAVKey() { return (state.settings.avkey||'').trim(); }
+
+async function fetchAV(ticker, type) {
+  const key = getAVKey();
+  if (!key) return null;
+  const sym = type === 'ASX'
+    ? ticker.toUpperCase().replace(/\.AX$/i,'') + '.AX'
+    : ticker.toUpperCase();
   try {
-    // v7 spark endpoint supports JSONP
-    const data = await jsonp(
-      `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${sym}&range=1d&interval=1d`
+    const r = await fetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${key}`,
+      { signal: AbortSignal.timeout(10000) }
     );
-    const spark = data?.spark?.result?.[0];
-    const price = spark?.response?.[0]?.meta?.regularMarketPrice;
-    return price || null;
+    const j = await r.json();
+    const price = parseFloat(j?.['Global Quote']?.['05. price']);
+    return (price && price > 0) ? price : null;
   } catch { return null; }
 }
 
-// Search uses the autocomplete endpoint which supports JSONP natively
-async function yahooSearch(q) {
-  const data = await jsonp(
-    `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=8&newsCount=0&listsCount=0`,
-    'callback'
-  );
-  return (data?.quotes || []).filter(q => q.symbol && q.quoteType !== 'OPTION' && q.quoteType !== 'FUTURE');
+async function fetchUSDToAUD() {
+  const key = getAVKey();
+  if (key) {
+    try {
+      const r = await fetch(
+        `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=AUD&apikey=${key}`,
+        { signal: AbortSignal.timeout(8000) }
+      );
+      const j = await r.json();
+      const rate = parseFloat(j?.['Realtime Currency Exchange Rate']?.['5. Exchange Rate']);
+      if (rate && rate > 0) return rate;
+    } catch {}
+  }
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(6000) });
+    const j = await r.json();
+    return j?.rates?.AUD || null;
+  } catch { return null; }
 }
 
-async function refreshPrices(){
-  if(!state.assets.length){showToast('No assets added yet','error');return}
-  const btn=document.getElementById('btn-live');
-  btn.innerHTML='<div class="spin"></div> Fetching…';
-  btn.disabled=true;
-  const results=await Promise.all(state.assets.map(async a=>{
-    const raw=await fetchYahooPrice(a.ticker,a.type);
-    return{a,raw};
-  }));
-  let updated=0,failed=[];
-  for(const{a,raw}of results){
-    if(raw){const aud=toAUD(raw,a.type);state.prices[a.ticker]={raw,aud,ts:Date.now()};updated++;}
-    else failed.push(a.ticker);
-  }
-  const audRaw=await fetchYahooPrice('AUDUSD=X','Other');
-  if(audRaw){
-    document.getElementById('rate-display').textContent=`AUD/USD ${audRaw.toFixed(4)}`;
-    document.getElementById('setting-rate').value=(1/audRaw).toFixed(4);
-    state.settings.usdaud=1/audRaw;
-  }
-  saveState();renderAll();
-  btn.innerHTML='<svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Live prices';
-  btn.disabled=false;
-  if(updated===0) showToast('All price fetches failed — try again in a moment','error');
-  else if(failed.length) showToast(`Updated ${updated} prices · ${failed.join(', ')} failed`,'');
-  else showToast(`All ${updated} prices updated ✓`,'success');
+async function fetchCryptoAUD(ticker) {
+  const clean = ticker.toUpperCase().replace(/-?USD$/i,'');
+  const id = COINGECKO_IDS[clean] || clean.toLowerCase();
+  try {
+    const r = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=aud`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    const j = await r.json();
+    const keys = Object.keys(j||{});
+    return keys.length ? (j[keys[0]]?.aud || null) : null;
+  } catch { return null; }
 }
 
+async function fetchPrice(ticker, type) {
+  if (type === 'Crypto') {
+    const aud = await fetchCryptoAUD(ticker);
+    return aud ? { raw: aud, aud } : null;
+  }
+  const usd = await fetchAV(ticker, type);
+  if (!usd) return null;
+  if (type === 'ASX') return { raw: usd, aud: usd };
+  const rate = parseFloat(state.settings.usdaud) || 1.5748;
+  return { raw: usd, aud: usd * rate };
+}
+
+async function refreshPrices() {
+  if (!getAVKey()) {
+    showToast('Add your free Alpha Vantage key in Settings first', 'error');
+    navigate('settings');
+    return;
+  }
+  if (!state.assets.length) { showToast('No assets added yet', 'error'); return; }
+  const btn = document.getElementById('btn-live');
+  btn.innerHTML = '<div class="spin"></div> Fetching…';
+  btn.disabled = true;
+
+  const freshRate = await fetchUSDToAUD();
+  if (freshRate) {
+    state.settings.usdaud = freshRate;
+    document.getElementById('setting-rate').value = freshRate.toFixed(4);
+    document.getElementById('rate-display').textContent = `AUD/USD ${(1/freshRate).toFixed(4)}`;
+  }
+
+  let updated = 0, failed = [];
+  for (const a of state.assets) {
+    const result = await fetchPrice(a.ticker, a.type);
+    if (result) {
+      state.prices[a.ticker] = { raw: result.raw, aud: result.aud, ts: Date.now() };
+      updated++;
+    } else { failed.push(a.ticker); }
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  saveState(); renderAll();
+  btn.innerHTML = '<svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Live prices';
+  btn.disabled = false;
+
+  if (updated === 0) showToast('No prices fetched — check your API key in Settings', 'error');
+  else if (failed.length) showToast(`Updated ${updated} · ${failed.join(', ')} failed`, '');
+  else showToast(`All ${updated} prices updated ✓`, 'success');
+}
 
 // ═══════════════════════════════════════════════════
 // PORTFOLIO CALCULATIONS
@@ -1234,6 +1266,7 @@ function renderScore(){
 // SETTINGS
 // ═══════════════════════════════════════════════════
 function renderSettings(){
+  document.getElementById('setting-avkey').value=state.settings.avkey||'';
   document.getElementById('setting-cash').value=state.settings.cash||0;
   document.getElementById('setting-rate').value=state.settings.usdaud||1.5748;
   document.getElementById('rate-display').textContent=`AUD/USD ${(1/(parseFloat(state.settings.usdaud)||1.5748)).toFixed(4)}`;
@@ -1329,149 +1362,28 @@ function saveJournal(){
   showToast('Journal entry saved · +25 XP','success');
 }
 
-// ── ASSET SEARCH ──
-let assetSearchTimer=null;
-let selectedAsset=null;
-
+// ── ASSET MODAL ──
 function openAddAsset(){
-  resetAssetSearch();
+  document.getElementById('m-ticker').value='';
+  document.getElementById('m-name').value='';
+  document.getElementById('m-target').value='';
+  document.getElementById('m-type').selectedIndex=0;
   document.getElementById('modal-asset').style.display='flex';
-  setTimeout(()=>document.getElementById('asset-search').focus(),80);
+  setTimeout(()=>document.getElementById('m-ticker').focus(),60);
 }
 
-function resetAssetSearch(){
-  selectedAsset=null;
-  document.getElementById('asset-step1').style.display='block';
-  document.getElementById('asset-step2').style.display='none';
-  document.getElementById('asset-search').value='';
-  document.getElementById('asset-results').style.display='none';
-  document.getElementById('asset-results').innerHTML='';
-  document.getElementById('asset-search-status').textContent='';
-  document.getElementById('asset-target').value='';
+function saveAssetManual(){
+  const ticker=document.getElementById('m-ticker').value.trim().toUpperCase();
+  const name=document.getElementById('m-name').value.trim();
+  const type=document.getElementById('m-type').value;
+  const target=parseFloat(document.getElementById('m-target').value)||0;
+  if(!ticker){showToast('Enter a ticker symbol','error');return}
+  if(state.assets.find(a=>a.ticker===ticker)){showToast(ticker+' already exists','error');return}
+  state.assets.push({ticker, name:name||ticker, type, target});
+  saveState(); renderAll(); closeModal('modal-asset');
+  showToast(ticker+' added — hit Live prices to fetch current price','success');
 }
 
-function debounceSearch(val){
-  clearTimeout(assetSearchTimer);
-  if(val.length<2){
-    document.getElementById('asset-results').style.display='none';
-    document.getElementById('asset-search-status').textContent='';
-    return;
-  }
-  document.getElementById('asset-search-status').textContent='Typing…';
-  assetSearchTimer=setTimeout(()=>runAssetSearch(),500);
-}
-
-async function runAssetSearch(){
-  const q=document.getElementById('asset-search').value.trim();
-  if(!q){showToast('Enter a search term','error');return}
-  const btn=document.getElementById('asset-search-btn');
-  const statusEl=document.getElementById('asset-search-status');
-  const resultsEl=document.getElementById('asset-results');
-  btn.innerHTML='<div class="spin"></div>';
-  btn.disabled=true;
-  statusEl.textContent='Searching Yahoo Finance…';
-  resultsEl.style.display='none';
-
-  try{
-    const quotes = await yahooSearch(q);
-
-    if(!quotes.length){
-      statusEl.textContent='No results found. Try a different search term.';
-      btn.innerHTML='<svg viewBox="0 0 12 12" fill="none" width="12" height="12"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 8l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Search';
-      btn.disabled=false;
-      return;
-    }
-
-    statusEl.textContent=`${quotes.length} result${quotes.length!==1?'s':''} found — select one below`;
-    resultsEl.innerHTML=quotes.map((q,i)=>{
-      const typeLabel=guessTypeLabel(q);
-      const exchange=q.exchange||q.exchDisp||'';
-      const name=q.longname||q.shortname||q.symbol;
-      return`<div class="asr-item" onclick="selectSearchResult(${i})" data-idx="${i}" data-ticker="${q.symbol}" data-name="${escHtml(name)}" data-type="${typeLabel}" data-exchange="${escHtml(exchange)}" data-qtype="${q.quoteType||''}">
-        <div class="asr-tick" style="color:${typeColor(typeLabel)}">${q.symbol}</div>
-        <div class="asr-info">
-          <div class="asr-name">${escHtml(name)}</div>
-          <div class="asr-meta">${escHtml(exchange)}${q.quoteType?' · '+q.quoteType:''}</div>
-        </div>
-        <div class="asr-type">${typeLabel}</div>
-      </div>`;
-    }).join('');
-    resultsEl.style.display='block';
-
-  } catch(e){
-    statusEl.textContent='Search failed — Yahoo Finance may be temporarily unavailable. Try again in a moment.';
-  }
-  btn.innerHTML='<svg viewBox="0 0 12 12" fill="none" width="12" height="12"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 8l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Search';
-  btn.disabled=false;
-}
-
-function guessTypeLabel(q){
-  const qt=(q.quoteType||'').toUpperCase();
-  const ex=(q.exchange||q.exchDisp||'').toUpperCase();
-  const sym=(q.symbol||'').toUpperCase();
-  if(qt==='CRYPTOCURRENCY') return 'Crypto';
-  if(qt==='ETF') return 'ETF';
-  if(qt==='MUTUALFUND') return 'Fund';
-  if(qt==='BOND'||qt==='FIXED_INCOME') return 'Bond';
-  if(ex==='ASX'||sym.endsWith('.AX')) return 'ASX';
-  if(ex==='NYQ'||ex==='NMS'||ex==='NGM'||ex==='PCX'||ex==='NYSE'||ex==='NASDAQ') return 'US Equity';
-  return 'Other';
-}
-
-function typeColor(t){
-  const m={'US Equity':'#5eead4','ASX':'#7dd3fc','Crypto':'#fbbf24','ETF':'#f0abfc','Bond':'#86efac','Fund':'#86efac','Other':'#8a8a96'};
-  return m[t]||'#8a8a96';
-}
-
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-
-function selectSearchResult(idx){
-  document.querySelectorAll('.asr-item').forEach(el=>el.classList.remove('selected'));
-  const el=document.querySelector(`.asr-item[data-idx="${idx}"]`);
-  if(!el) return;
-  el.classList.add('selected');
-  const ticker=el.dataset.ticker;
-  const name=el.dataset.name;
-  const type=el.dataset.type;
-  const exchange=el.dataset.exchange;
-  selectedAsset={ticker,name,type};
-
-  // Check duplicate
-  if(state.assets.find(a=>a.ticker===ticker)){
-    showToast(`${ticker} is already in your assets`,'error');
-    return;
-  }
-
-  // Populate confirm card
-  const col=typeColor(type);
-  document.getElementById('asset-confirm-icon').style.background=col+'22';
-  document.getElementById('asset-confirm-icon').style.color=col;
-  document.getElementById('asset-confirm-icon').textContent=ticker.replace('.AX','').slice(0,4);
-  document.getElementById('asset-confirm-name').textContent=name;
-  document.getElementById('asset-confirm-meta').textContent=ticker+(exchange?' · '+exchange:'')+' · '+type;
-
-  // Pre-select type dropdown
-  const sel=document.getElementById('asset-type');
-  for(let i=0;i<sel.options.length;i++){
-    if(sel.options[i].value===type){sel.selectedIndex=i;break}
-  }
-
-  // Transition to step 2
-  document.getElementById('asset-step1').style.display='none';
-  document.getElementById('asset-step2').style.display='block';
-  document.getElementById('asset-target').focus();
-}
-
-function saveAsset(){
-  if(!selectedAsset){showToast('Search and select an asset first','error');return}
-  const{ticker,name}=selectedAsset;
-  const type=document.getElementById('asset-type').value;
-  const target=parseFloat(document.getElementById('asset-target').value)||0;
-  if(state.assets.find(a=>a.ticker===ticker)){showToast('Asset already exists','error');return}
-  state.assets.push({ticker,name,type,target});
-  saveState();renderAll();closeModal('modal-asset');
-  showToast(`${ticker} added — hit Live prices to fetch current price`,'success');
-}
 
 function openAddWatch(){document.getElementById('modal-watch').style.display='flex'}
 function saveWatch(){
